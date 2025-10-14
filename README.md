@@ -97,9 +97,3 @@ This project is licensed under the **MIT License** — free to use and modify wi
 ### ⭐ Don’t forget to star this repo if you like it!
 
 ```
-
----
-
-Agar tu chahe to main is README ko tere deploy hone ke baad **auto-update karke live link** insert kar dunga (jaise Netlify ya GitHub Pages ka).  
-Bata de kis platform pe host karega — main tujhe ek-click deploy guide bhi likh du?
-```
