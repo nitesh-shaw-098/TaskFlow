@@ -80,7 +80,7 @@ Stay organized, track progress, and boost productivity — all in one elegant in
 
 ## 🧑‍💻 Developer Info
 
-**Author:** [Shaw Nitesh]
+**Author:** Shaw Nitesh
 **GitHub:** [@nitesh-shaw-098](https://github.com/nitesh-shaw-098)
 **Email:** [niteshshaw032002@email.com](mailto:niteshshaw032002@email.com)
 
