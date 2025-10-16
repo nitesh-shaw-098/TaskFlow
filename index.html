@@ -1,2649 +1,425 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskFlow - Modern To-Do List with Particle Effects</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        /* Light Mode Variables */
-        :root {
-            --primary-color: #667eea;
-            --secondary-color: #764ba2;
-            --accent-color: #f093fb;
-            --success-color: #48bb78;
-            --warning-color: #f6ad55;
-            --danger-color: #fc8181;
-            --light-bg: #f7fafc;
-            --card-bg: rgba(255, 255, 255, 0.9);
-            --text-primary: #2d3748;
-            --text-secondary: #718096;
-            --border-color: rgba(0, 0, 0, 0.1);
-            --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.15);
-            --shadow-lg: 0 20px 25px rgba(0, 0, 0, 0.2);
-            --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.25);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            --glow: 0 0 20px rgba(102, 126, 234, 0.5);
-            --bg-gradient-start: #f7fafc;
-            --bg-gradient-mid: #edf2f7;
-            --bg-gradient-end: #e2e8f0;
-        }
-
-        /* Dark Mode Variables */
-        body.dark-mode {
-            --primary-color: #9f7aea;
-            --secondary-color: #ed64a6;
-            --accent-color: #fbb6ce;
-            --success-color: #68d391;
-            --warning-color: #fbb040;
-            --danger-color: #fc8181;
-            --light-bg: #1a202c;
-            --card-bg: rgba(26, 32, 44, 0.9);
-            --text-primary: #f7fafc;
-            --text-secondary: #cbd5e0;
-            --border-color: rgba(255, 255, 255, 0.1);
-            --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.4);
-            --shadow-lg: 0 20px 25px rgba(0, 0, 0, 0.5);
-            --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.6);
-            --glow: 0 0 30px rgba(159, 122, 234, 0.6);
-            --bg-gradient-start: #0f0f23;
-            --bg-gradient-mid: #1a1a3e;
-            --bg-gradient-end: #16213e;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-mid), var(--bg-gradient-end));
-            min-height: 100vh;
-            color: var(--text-primary);
-            transition: var(--transition);
-            overflow-x: hidden;
-            position: relative;
-        }
-
-        /* Particle Canvas */
-        #particleCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        /* Animated Gradient Background */
-        .animated-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(270deg, var(--bg-gradient-start), var(--bg-gradient-mid), var(--bg-gradient-end), var(--bg-gradient-start));
-            background-size: 800% 800%;
-            animation: gradientShift 15s ease infinite;
-            z-index: -1;
-        }
-
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            position: relative;
-            z-index: 1;
-        }
-
-        header {
-            text-align: center;
-            color: var(--text-primary);
-            padding: 40px 0 30px;
-            animation: fadeInDown 0.8s ease;
-            position: relative;
-        }
-
-        header h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color), var(--primary-color));
-            background-size: 200% 200%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: gradientText 3s ease infinite;
-            text-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
-        }
-
-        @keyframes gradientText {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            color: var(--text-secondary);
-        }
-
-        .header-controls {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            gap: 15px;
-            z-index: 1000;
-        }
-
-        .theme-toggle,
-        .notification-toggle {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 2px solid var(--border-color);
-            color: var(--text-primary);
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            transition: var(--transition);
-            position: relative;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .theme-toggle:hover,
-        .notification-toggle:hover {
-            background: var(--card-bg);
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-xl);
-            border-color: var(--primary-color);
-        }
-
-        .theme-toggle:hover {
-            transform: rotate(180deg);
-        }
-
-        .notification-toggle:hover {
-            transform: scale(1.1);
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: linear-gradient(135deg, var(--danger-color), var(--accent-color));
-            color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            font-weight: bold;
-            animation: pulse 2s infinite;
-            box-shadow: 0 0 15px rgba(252, 129, 129, 0.6);
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 15px rgba(252, 129, 129, 0.6); }
-            50% { transform: scale(1.1); box-shadow: 0 0 25px rgba(252, 129, 129, 0.8); }
-            100% { transform: scale(1); box-shadow: 0 0 15px rgba(252, 129, 129, 0.6); }
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 320px;
-            gap: 25px;
-            animation: fadeIn 1s ease;
-        }
-
-        .task-section,
-        .stats-section {
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: var(--shadow-xl);
-            border: 1px solid var(--border-color);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .task-section::before,
-        .stats-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
-        }
-
-        .add-task-form {
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        input[type="text"],
-        input[type="date"],
-        input[type="time"],
-        input[type="range"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 14px 18px;
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: var(--transition);
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-primary);
-            backdrop-filter: blur(10px);
-        }
-
-        body:not(.dark-mode) input[type="text"],
-        body:not(.dark-mode) input[type="date"],
-        body:not(.dark-mode) input[type="time"],
-        body:not(.dark-mode) select,
-        body:not(.dark-mode) textarea {
-            background: rgba(255, 255, 255, 0.8);
-            border-color: rgba(0, 0, 0, 0.1);
-        }
-
-        input[type="range"] {
-            padding: 0;
-            height: 8px;
-            cursor: pointer;
-        }
-
-        input[type="text"]:focus,
-        input[type="date"]:focus,
-        input[type="time"]:focus,
-        select:focus,
-        textarea:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2), var(--glow);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .btn {
-            padding: 14px 28px;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn:hover::before {
-            left: 100%;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            width: 100%;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
-        }
-
-        .btn-primary:active {
-            transform: translateY(-1px);
-        }
-
-        .btn-sound {
-            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
-            color: white;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            margin-top: 10px;
-            width: auto;
-            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
-        }
-
-        .btn-sound:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(240, 147, 251, 0.6);
-        }
-
-        .filter-controls {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            padding: 10px 20px;
-            border: 2px solid var(--border-color);
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 25px;
-            cursor: pointer;
-            transition: var(--transition);
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            font-weight: 600;
-            backdrop-filter: blur(10px);
-        }
-
-        body:not(.dark-mode) .filter-btn {
-            background: rgba(255, 255, 255, 0.8);
-            border-color: rgba(0, 0, 0, 0.1);
-        }
-
-        .filter-btn.active {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            border-color: transparent;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .filter-btn:hover:not(.active) {
-            border-color: var(--primary-color);
-            color: var(--text-primary);
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .search-box {
-            position: relative;
-            margin-bottom: 25px;
-        }
-
-        .search-box input {
-            padding-left: 50px;
-        }
-
-        .search-box i {
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-        }
-
-        .task-list {
-            list-style: none;
-        }
-
-        .task-item {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: flex-start;
-            gap: 15px;
-            transition: var(--transition);
-            cursor: move;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-
-        body:not(.dark-mode) .task-item {
-            background: rgba(255, 255, 255, 0.9);
-            border-color: rgba(0, 0, 0, 0.1);
-        }
-
-        .task-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .task-item:hover::before {
-            opacity: 1;
-        }
-
-        .task-item.dragging {
-            opacity: 0.5;
-            transform: rotate(2deg);
-        }
-
-        .task-item:hover {
-            transform: translateX(5px);
-            box-shadow: var(--shadow-lg);
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        body:not(.dark-mode) .task-item:hover {
-            background: rgba(255, 255, 255, 1);
-        }
-
-        .task-item.completed {
-            opacity: 0.6;
-        }
-
-        .task-item.completed .task-content h3,
-        .task-item.completed .task-content p {
-            text-decoration: line-through;
-            color: var(--text-secondary);
-        }
-
-        .task-checkbox {
-            width: 26px;
-            height: 26px;
-            border: 2px solid var(--primary-color);
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-            flex-shrink: 0;
-            margin-top: 2px;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        body:not(.dark-mode) .task-checkbox {
-            background: rgba(255, 255, 255, 0.8);
-        }
-
-        .task-checkbox:hover {
-            background: rgba(102, 126, 234, 0.2);
-            transform: scale(1.1);
-        }
-
-        .task-checkbox.checked {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border-color: transparent;
-        }
-
-        .task-checkbox.checked::after {
-            content: '✓';
-            color: white;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        .task-content {
-            flex: 1;
-        }
-
-        .task-content h3 {
-            font-size: 1.2rem;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-            font-weight: 600;
-        }
-
-        .task-content p {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            margin-bottom: 12px;
-            line-height: 1.5;
-        }
-
-        .task-meta {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .task-priority {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .priority-high {
-            background: linear-gradient(135deg, rgba(252, 129, 129, 0.2), rgba(240, 147, 251, 0.2));
-            color: var(--danger-color);
-            border: 1px solid rgba(252, 129, 129, 0.3);
-        }
-
-        .priority-medium {
-            background: linear-gradient(135deg, rgba(246, 173, 85, 0.2), rgba(252, 129, 129, 0.2));
-            color: var(--warning-color);
-            border: 1px solid rgba(246, 173, 85, 0.3);
-        }
-
-        .priority-low {
-            background: linear-gradient(135deg, rgba(72, 187, 120, 0.2), rgba(102, 126, 234, 0.2));
-            color: var(--success-color);
-            border: 1px solid rgba(72, 187, 120, 0.3);
-        }
-
-        .task-category {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(240, 147, 251, 0.2));
-            color: var(--primary-color);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            font-weight: 600;
-        }
-
-        .task-due {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 15px;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        body:not(.dark-mode) .task-due {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        .task-due.overdue {
-            color: var(--danger-color);
-            font-weight: 600;
-            background: linear-gradient(135deg, rgba(252, 129, 129, 0.1), rgba(240, 147, 251, 0.1));
-            border: 1px solid rgba(252, 129, 129, 0.2);
-        }
-
-        .task-due.due-soon {
-            color: var(--warning-color);
-            font-weight: 600;
-            background: linear-gradient(135deg, rgba(246, 173, 85, 0.1), rgba(252, 129, 129, 0.1));
-            border: 1px solid rgba(246, 173, 85, 0.2);
-        }
-
-        .task-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .task-btn {
-            width: 36px;
-            height: 36px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-secondary);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-        }
-
-        body:not(.dark-mode) .task-btn {
-            background: rgba(255, 255, 255, 0.8);
-            border-color: rgba(0, 0, 0, 0.1);
-        }
-
-        .task-btn:hover {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            transform: scale(1.1);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .task-btn.delete:hover {
-            background: linear-gradient(135deg, var(--danger-color), var(--accent-color));
-            box-shadow: 0 4px 15px rgba(252, 129, 129, 0.4);
-        }
-
-        .stats-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-            position: relative;
-            overflow: hidden;
-        }
-
-        body:not(.dark-mode) .stats-card {
-            background: rgba(255, 255, 255, 0.9);
-            border-color: rgba(0, 0, 0, 0.1);
-        }
-
-        .stats-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
-        }
-
-        .stats-card h3 {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-        }
-
-        .stats-number {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 12px;
-            position: relative;
-        }
-
-        body:not(.dark-mode) .progress-bar {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
-            border-radius: 10px;
-            transition: width 0.8s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-secondary);
-        }
-
-        .empty-state i {
-            font-size: 5rem;
-            margin-bottom: 20px;
-            opacity: 0.3;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .empty-state h3 {
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-            color: var(--text-primary);
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            z-index: 2000;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal.active {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 35px;
-            max-width: 550px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            animation: slideUp 0.4s ease;
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-xl);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .modal-header h2 {
-            color: var(--text-primary);
-            font-size: 1.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .close-modal {
-            width: 40px;
-            height: 40px;
-            border: none;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-            color: var(--text-secondary);
-        }
-
-        body:not(.dark-mode) .close-modal {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        .close-modal:hover {
-            background: linear-gradient(135deg, var(--danger-color), var(--accent-color));
-            color: white;
-            transform: rotate(90deg);
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            padding: 18px 24px;
-            border-radius: 12px;
-            box-shadow: var(--shadow-xl);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transform: translateX(400px);
-            transition: transform 0.4s ease;
-            z-index: 3000;
-            border: 1px solid var(--border-color);
-        }
-
-        .toast.show {
-            transform: translateX(0);
-        }
-
-        .toast.success {
-            border-left: 4px solid var(--success-color);
-        }
-
-        .toast.error {
-            border-left: 4px solid var(--danger-color);
-        }
-
-        .toast.info {
-            border-left: 4px solid var(--primary-color);
-        }
-
-        .notification-settings {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-        }
-
-        body:not(.dark-mode) .notification-settings {
-            background: rgba(255, 255, 255, 0.9);
-            border-color: rgba(0, 0, 0, 0.1);
-        }
-
-        .notification-settings h3 {
-            font-size: 1.1rem;
-            margin-bottom: 18px;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 600;
-        }
-
-        .setting-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-        }
-
-        .setting-item label {
-            margin-bottom: 0;
-            font-weight: 500;
-            font-size: 0.95rem;
-        }
-
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 56px;
-            height: 28px;
-            flex-shrink:0;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.1);
-            transition: var(--transition);
-            border-radius: 28px;
-            border: 1px solid var(--border-color);
-        }
-
-        body:not(.dark-mode) .slider {
-            background: rgba(0, 0, 0, 0.1);
-            border-color: rgba(0, 0, 0, 0.2);
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 4px;
-            bottom: 4px;
-            background: white;
-            transition: var(--transition);
-            border-radius: 50%;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        input:checked + .slider {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border-color: transparent;
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(28px);
-        }
-
-        .volume-control {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 15px;
-        }
-
-        .volume-control i {
-            color: var(--text-secondary);
-            font-size: 1.3rem;
-        }
-
-        .volume-value {
-            min-width: 45px;
-            text-align: center;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .sound-test-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 18px;
-        }
-
-        .sound-test-btn {
-            padding: 12px 16px;
-            border: 2px solid var(--border-color);
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: var(--transition);
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-weight: 600;
-        }
-
-        body:not(.dark-mode) .sound-test-btn {
-            background: rgba(255, 255, 255, 0.8);
-            border-color: rgba(0, 0, 0, 0.1);
-        }
-
-        .sound-test-btn:hover {
-            border-color: var(--primary-color);
-            color: var(--text-primary);
-            background: rgba(102, 126, 234, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .notification-history {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 20px;
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-        }
-
-        body:not(.dark-mode) .notification-history {
-            background: rgba(255, 255, 255, 0.9);
-            border-color: rgba(0, 0, 0, 0.1);
-        }
-
-        .notification-history h3 {
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 600;
-        }
-
-        .notification-item {
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border: 1px solid var(--border-color);
-        }
-
-        body:not(.dark-mode) .notification-item {
-            background: rgba(255, 255, 255, 0.8);
-            border-color: rgba(0, 0, 0, 0.05);
-        }
-
-        .notification-item i {
-            color: var(--primary-color);
-        }
-
-        .notification-time {
-            margin-left: auto;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        .permission-banner {
-            background: linear-gradient(135deg, var(--warning-color), var(--danger-color));
-            color: white;
-            padding: 18px 24px;
-            border-radius: 16px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            animation: slideDown 0.6s ease;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .permission-banner.hidden {
-            display: none;
-        }
-
-        .permission-banner button {
-            background: white;
-            color: var(--danger-color);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .permission-banner button:hover {
-            transform: scale(1.05);
-            box-shadow: var(--shadow-md);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-        }
-
-        body:not(.dark-mode) ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-
-            .stats-section {
-                position: static;
-            }
-
-            header h1 {
-                font-size: 2.5rem;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-
-            .filter-controls {
-                justify-content: center;
-            }
-
-            .task-item {
-                padding: 15px;
-            }
-
-            .modal-content {
-                padding: 25px;
-            }
-
-            .header-controls {
-                top: 15px;
-                right: 15px;
-            }
-
-            .theme-toggle,
-            .notification-toggle {
-                width: 48px;
-                height: 48px;
-                font-size: 1.1rem;
-            }
-
-            .sound-test-buttons {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 15px;
-            }
-
-            .task-section {
-                padding: 20px;
-            }
-
-            header {
-                padding: 30px 0 20px;
-            }
-
-            header h1 {
-                font-size: 2rem;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Work Showcase</title>
+
+  <style>
+    /* ===== Base Styles ===== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      z-index: 0;
+    }
+
+    /* ===== Animated Gradient Background ===== */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(120deg, #0f0f1f, #001a33, #001f0f, #130033);
+      background-size: 300% 300%;
+      animation: gradientMove 15s ease infinite;
+      z-index: -2;
+    }
+
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* ===== Glow Overlay ===== */
+    body::after {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(0,255,200,0.15), rgba(0,0,0,0.7));
+      z-index: -1;
+    }
+
+    h1 {
+      margin: 40px 0 10px;
+      font-size: 2.8rem;
+      text-align: center;
+      background: linear-gradient(45deg, #00f5a0, #00d9f5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: glowText 3s infinite alternate;
+    }
+
+    @keyframes glowText {
+      from { text-shadow: 0 0 10px #00f5a0; }
+      to { text-shadow: 0 0 20px #00d9f5; }
+    }
+
+    /* ===== Search & Filters ===== */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      margin: 20px 0 30px;
+    }
+
+    input[type="text"] {
+      padding: 10px 15px;
+      border-radius: 30px;
+      border: none;
+      outline: none;
+      background: rgba(30, 30, 30, 0.8);
+      color: #fff;
+      width: 250px;
+      transition: box-shadow 0.3s, background 0.3s;
+    }
+
+    input[type="text"]:focus {
+      box-shadow: 0 0 10px #00d9f5;
+      background: rgba(0, 0, 0, 0.6);
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 8px 16px;
+      border-radius: 25px;
+      border: 1px solid #00d9f5;
+      background: rgba(255, 255, 255, 0.05);
+      color: #00d9f5;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(5px);
+    }
+
+    .filter-btn.active,
+    .filter-btn:hover {
+      background: #00d9f5;
+      color: #000;
+      transform: scale(1.05);
+    }
+
+    /* ===== Project Grid ===== */
+    .projects-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 25px;
+      width: 90%;
+      max-width: 1300px;
+      padding-bottom: 60px;
+      transition: 0.4s;
+    }
+
+    .project-card {
+      background: rgba(28, 28, 28, 0.9);
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0, 255, 200, 0.1);
+      transition: all 0.4s ease;
+      cursor: pointer;
+      opacity: 1;
+      transform: scale(1);
+      backdrop-filter: blur(6px);
+    }
+
+    .project-card.hide {
+      opacity: 0;
+      transform: scale(0.9);
+      pointer-events: none;
+    }
+
+    .project-card img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .project-card:hover img {
+      transform: scale(1.08);
+    }
+
+    .project-name {
+      text-align: center;
+      padding: 12px;
+      font-weight: 500;
+      color: #00f5a0;
+    }
+
+    /* ===== Modal ===== */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      backdrop-filter: blur(8px);
+    }
+
+    .modal-content {
+      background: #121212;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 700px;
+      width: 90%;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 0 25px rgba(0, 255, 200, 0.4);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-content img {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+    }
+
+    .modal-content h2 {
+      margin-top: 15px;
+      color: #00f5a0;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.8rem;
+      cursor: pointer;
+      color: #fff;
+      transition: color 0.3s ease;
+    }
+
+    .close-btn:hover {
+      color: #00f5a0;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 2rem; }
+      input[type="text"] { width: 200px; }
+      .project-card img { height: 120px; }
+    }
+  </style>
 </head>
+
 <body>
-    <div class="animated-bg"></div>
-    <canvas id="particleCanvas"></canvas>
+  <h1>My Work Showcase</h1>
 
-    <div class="header-controls">
-        <button class="notification-toggle" onclick="taskManager.showNotificationSettings()" title="Notification Settings">
-            <i class="fas fa-bell"></i>
-            <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
-        </button>
-        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
-            <i class="fas fa-moon" id="themeIcon"></i>
-        </button>
+  <!-- ===== Controls ===== -->
+  <div class="controls">
+    <input type="text" id="searchInput" placeholder="Search projects..." />
+    <div class="filters">
+      <button class="filter-btn active" data-category="all">All</button>
+      <button class="filter-btn" data-category="web">Web</button>
+      <button class="filter-btn" data-category="mobile">Mobile</button>
+      <button class="filter-btn" data-category="uiux">UI/UX</button>
+      <button class="filter-btn" data-category="ai">AI</button>
+      <button class="filter-btn" data-category="games">Games</button>
     </div>
+  </div>
 
-    <div class="container">
-        <header>
-            <h1><i class="fas fa-tasks"></i> TaskFlow</h1>
-            <p>Organize your life, one task at a time</p>
-        </header>
+  <!-- ===== Projects Grid ===== -->
+  <div class="projects-container" id="projectsContainer"></div>
 
-        <div class="main-content">
-            <section class="task-section">
-                <div class="permission-banner" id="permissionBanner">
-                    <div>
-                        <i class="fas fa-bell"></i>
-                        <span>Enable browser notifications to never miss a deadline!</span>
-                    </div>
-                    <button onclick="taskManager.requestNotificationPermission()">Enable</button>
-                </div>
-
-                <form class="add-task-form" id="addTaskForm">
-                    <div class="form-group">
-                        <label for="taskTitle">Task Title *</label>
-                        <input type="text" id="taskTitle" placeholder="What needs to be done?" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="taskDescription">Description</label>
-                        <textarea id="taskDescription" placeholder="Add more details..."></textarea>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="taskPriority">Priority</label>
-                            <select id="taskPriority">
-                                <option value="low">Low</option>
-                                <option value="medium" selected>Medium</option>
-                                <option value="high">High</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="taskCategory">Category</label>
-                            <select id="taskCategory">
-                                <option value="personal">Personal</option>
-                                <option value="work">Work</option>
-                                <option value="shopping">Shopping</option>
-                                <option value="health">Health</option>
-                                <option value="education">Education</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="taskDue">Due Date</label>
-                            <input type="date" id="taskDue">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="taskTime">Due Time</label>
-                            <input type="time" id="taskTime">
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Add Task
-                    </button>
-                </form>
-
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="Search tasks...">
-                </div>
-
-                <div class="filter-controls">
-                    <button class="filter-btn active" data-filter="all">All Tasks</button>
-                    <button class="filter-btn" data-filter="active">Active</button>
-                    <button class="filter-btn" data-filter="completed">Completed</button>
-                    <button class="filter-btn" data-filter="today">Due Today</button>
-                    <button class="filter-btn" data-filter="overdue">Overdue</button>
-                </div>
-
-                <ul class="task-list" id="taskList">
-                    <!-- Tasks will be dynamically added here -->
-                </ul>
-
-                <div class="empty-state" id="emptyState" style="display: none;">
-                    <i class="fas fa-clipboard-list"></i>
-                    <h3>No tasks yet</h3>
-                    <p>Start by adding your first task above!</p>
-                </div>
-            </section>
-
-            <aside class="stats-section">
-                <div class="stats-card">
-                    <h3>Total Tasks</h3>
-                    <div class="stats-number" id="totalTasks">0</div>
-                </div>
-
-                <div class="stats-card">
-                    <h3>Completed</h3>
-                    <div class="stats-number" id="completedTasks">0</div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <div class="stats-card">
-                    <h3>Active Tasks</h3>
-                    <div class="stats-number" id="activeTasks">0</div>
-                </div>
-
-                <div class="stats-card">
-                    <h3>Overdue</h3>
-                    <div class="stats-number" id="overdueTasks">0</div>
-                </div>
-
-                <div class="notification-settings">
-                    <h3><i class="fas fa-cog"></i> Quick Settings</h3>
-                    <div class="setting-item">
-                        <label>Enable Notifications</label>
-                        <label class="switch">
-                            <input type="checkbox" id="enableNotifications" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="setting-item">
-                        <label>Due Date Reminders</label>
-                        <label class="switch">
-                            <input type="checkbox" id="dueDateReminders" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="setting-item">
-                        <label>Overdue Alerts</label>
-                        <label class="switch">
-                            <input type="checkbox" id="overdueAlerts" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="setting-item">
-                        <label>Task Completion</label>
-                        <label class="switch">
-                            <input type="checkbox" id="completionNotifications" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="setting-item">
-                        <label>Sound Effects</label>
-                        <label class="switch">
-                            <input type="checkbox" id="soundEnabled" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="volume-control">
-                        <i class="fas fa-volume-down"></i>
-                        <input type="range" id="soundVolume" min="0" max="100" value="50">
-                        <i class="fas fa-volume-up"></i>
-                        <span class="volume-value" id="volumeValue">50%</span>
-                    </div>
-                    <div class="sound-test-buttons">
-                        <button class="sound-test-btn" onclick="taskManager.playSound('success')">
-                            <i class="fas fa-check"></i> Success
-                        </button>
-                        <button class="sound-test-btn" onclick="taskManager.playSound('warning')">
-                            <i class="fas fa-exclamation"></i> Warning
-                        </button>
-                        <button class="sound-test-btn" onclick="taskManager.playSound('danger')">
-                            <i class="fas fa-bell"></i> Alert
-                        </button>
-                        <button class="sound-test-btn" onclick="taskManager.playSound('info')">
-                            <i class="fas fa-info"></i> Info
-                        </button>
-                    </div>
-                </div>
-
-                <div class="notification-history">
-                    <h3><i class="fas fa-history"></i> Recent Notifications</h3>
-                    <div id="notificationHistory">
-                        <div class="notification-item">
-                            <i class="fas fa-info-circle"></i>
-                            <span>No notifications yet</span>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-        </div>
+  <!-- ===== Modal ===== -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <span class="close-btn" id="closeModal">&times;</span>
+      <img id="modalImg" src="" alt="Project Preview">
+      <h2 id="modalTitle"></h2>
     </div>
+  </div>
 
-    <!-- Edit Modal -->
-    <div class="modal" id="editModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Edit Task</h2>
-                <button class="close-modal" onclick="closeEditModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="editTaskForm">
-                <input type="hidden" id="editTaskId">
-                
-                <div class="form-group">
-                    <label for="editTaskTitle">Task Title *</label>
-                    <input type="text" id="editTaskTitle" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="editTaskDescription">Description</label>
-                    <textarea id="editTaskDescription"></textarea>
-                </div>
+  <script>
+    const projectsContainer = document.getElementById('projectsContainer');
+    const modal = document.getElementById('modal');
+    const modalImg = document.getElementById('modalImg');
+    const modalTitle = document.getElementById('modalTitle');
+    const closeModal = document.getElementById('closeModal');
+    const searchInput = document.getElementById('searchInput');
+    const filterButtons = document.querySelectorAll('.filter-btn');
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="editTaskPriority">Priority</label>
-                        <select id="editTaskPriority">
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
+    // ===== Project Data =====
+    const categories = ['web', 'mobile', 'uiux', 'ai', 'games'];
+    const projects = [
+  {
+    name: "Analog Clock",
+    image: "images/analog-clock.png",
+    category: "web",
+    link: "https://nitesh-shaw-098.github.io/Analog-clock/",
+    description: "An analogue clock has a clock face with a dial of numbers from 1 to 12. It uses an hour hand and a minute hand that rotate in a clockwise direction around the numbers to show the time. On an analogue clock, the longer hand shows the minutes and the shorter hand shows the hours."
+  },
+  {
+    name: "Animated Doraemon",
+    image: "images/doraemon.png",
+    category: "web",
+    link: "https://nitesh-shaw-098.github.io/Doraemon/",
+    description:"This project is a fun front-end web project that draws and animates Doraemon using only HTML, CSS, and JavaScript. It includes interactive elements like speech bubbles, waving animation, and a responsive layout."
+  },
+  {
+    name: "Sky Jump",
+    image: "images/sky-jump.png",
+    category: "games",
+    link: "https://nitesh-shaw-098.github.io/Sky-Jump/",
+    description:"Welcome to My Awesome Game — a fun project built using HTML, CSS, and JavaScript in a single file! This game is live on GitHub Pages, so you can play it anytime, anywhere. 🚀"
+  },
+  {
+    name: "To Do List",
+    image: "images/to-do-list.png",
+    category: "ai",
+    link: "https://nitesh-shaw-098.github.io/To-Do-List/",
+    description:"A simple yet powerful To-Do List web app with reminders, notifications, recurring tasks, and import/export support.Built with HTML, TailwindCSS, and Vanilla JS."
+  },
+  {
+    name: "SVG Flower Generator",
+    image: "images/random-flower-generation.png",
+    category: "ai",
+    link: "https://nitesh-shaw-098.github.io/SVG-Flower-Generator/",
+    description:"This project is an interactive web application that procedurally generates colorful, animated SVG flowers. A single flower is generated on page load, and users can click anywhere on the screen to create new, unique flowers at that location."
+  },
+  {
+    name: "I❤️U animation",
+    image: "images/love.png",
+    category: "uiux",
+    link: "https://nitesh-shaw-098.github.io/I-LOVE-YOU-ANIMATION/",
+    description:"A beautiful SVG animation built with HTML, CSS, JavaScript, and powered by mo.js. The animation features smooth letter transitions, bursts, and heart effects with optional sound effects."
+  },
+  {
+    name: "Impress your crush",
+    image: "images/impress-your-crush.png",
+    category: "Games",
+    link: "https://nitesh-shaw-098.github.io/Impress-your-crush/",
+    description:"Make a cute, fun, and interactive web page to impress your crush — share a playful link that reveals messages, animations, and surprises. Lightweight, responsive, and easy to customize."
+  },
+  {
+    name: "Aur Calculator",
+    image: "images/aura-calculator.png",
+    category: "mobile",
+    link: "https://nitesh-shaw-098.github.io/Aura-Calculator/",
+    description:"A modern, responsive, and premium-style Calculator Web App with multiple modes (Standard & Converter). Designed with clean UI/UX principles, mobile responsiveness, and smooth interactions."
+  },
+  {
+    name: "M-Indicator - Mumbai Train Guide 🚊",
+    image: "images/m-indicator.png",
+    category: "web",
+    link: "https://nitesh-shaw-098.github.io/m-indicator-app/",
+    description:"A comprehensive, responsive web application for Mumbai local train schedules and live tracking, featuring a beautiful sky blue theme and modern user interface."
+  },
+  {
+    name: "🦋 Monarch Butterfly Animation",
+    image: "images/butterfly.png",
+    category: "uiux",
+    link: "https://nitesh-shaw-098.github.io/Butterfly-animation/",
+    description:"A simple and visually appealing CSS & HTML animation project that brings a monarch butterfly to life as it flutters gracefully toward a flower. This project demonstrates the use of keyframe animations, positioning, and smooth transitions in web design."
+  },
+  {
+    name: "🌟 Animated Flex Cards",
+    image: "images/flex-card.png",
+    category: "uiux",
+    link: "https://nitesh-shaw-098.github.io/Animated-Flex-Card/",
+    description:"This project showcases a set of visually engaging, interactive flex cards."
+  },
+  {
+    name: "📅 Countdown Timer",
+    image: "images/count-down.png",
+    category: "web",
+    link: "https://nitesh-shaw-098.github.io/Countdown-Timer/",
+    description:"A simple, clean, and stylish digital countdown timer built with HTML, CSS, and JavaScript."
+  },
+  {
+    name: "🌟 Interactive Particle Morphing Animation ❤️",
+    image: "images/heart-star-animation.png",
+    category: "uiux",
+    link: "https://nitesh-shaw-098.github.io/-Interactive-Particle-Morphing-Animation-/",
+    description:"A visually captivating 3D particle animation built with Three.js. This project showcases an interactive system where thousands of glowing particles seamlessly morph between a star and a heart shape."
+  },
+  {
+    name: "🧠 TaskFlow – Modern To-Do List",
+    image: "images/task-flow.png",
+    category: "uiux",
+    link: "https://nitesh-shaw-098.github.io/TaskFlow/",
+    description:"TaskFlow is a beautifully designed productivity and task management app built with pure HTML, CSS, and JavaScript."
+  }
+];
 
-                    <div class="form-group">
-                        <label for="editTaskCategory">Category</label>
-                        <select id="editTaskCategory">
-                            <option value="personal">Personal</option>
-                            <option value="work">Work</option>
-                            <option value="shopping">Shopping</option>
-                            <option value="health">Health</option>
-                            <option value="education">Education</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="editTaskDue">Due Date</label>
-                        <input type="date" id="editTaskDue">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="editTaskTime">Due Time</label>
-                        <input type="time" id="editTaskTime">
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Save Changes
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Notification Settings Modal -->
-    <div class="modal" id="notificationSettingsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Notification Settings</h2>
-                <button class="close-modal" onclick="taskManager.closeNotificationSettings()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="notification-settings">
-                <div class="setting-item">
-                    <label>Enable Browser Notifications</label>
-                    <label class="switch">
-                        <input type="checkbox" id="modalEnableNotifications" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="setting-item">
-                    <label>Due Date Reminders</label>
-                    <label class="switch">
-                        <input type="checkbox" id="modalDueDateReminders" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="setting-item">
-                    <label>Overdue Alerts</label>
-                    <label class="switch">
-                        <input type="checkbox" id="modalOverdueAlerts" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="setting-item">
-                    <label>Task Completion Notifications</label>
-                    <label class="switch">
-                        <input type="checkbox" id="modalCompletionNotifications" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="setting-item">
-                    <label>Daily Summary (9:00 AM)</label>
-                    <label class="switch">
-                        <input type="checkbox" id="modalDailySummary">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="setting-item">
-                    <label>Sound Effects</label>
-                    <label class="switch">
-                        <input type="checkbox" id="modalSoundEnabled" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="volume-control">
-                    <i class="fas fa-volume-down"></i>
-                    <input type="range" id="modalSoundVolume" min="0" max="100" value="50">
-                    <i class="fas fa-volume-up"></i>
-                    <span class="volume-value" id="modalVolumeValue">50%</span>
-                </div>
-                <div class="sound-test-buttons">
-                    <button class="sound-test-btn" onclick="taskManager.playSound('success')">
-                        <i class="fas fa-check"></i> Success
-                    </button>
-                    <button class="sound-test-btn" onclick="taskManager.playSound('warning')">
-                        <i class="fas fa-exclamation"></i> Warning
-                    </button>
-                    <button class="sound-test-btn" onclick="taskManager.playSound('danger')">
-                        <i class="fas fa-bell"></i> Alert
-                    </button>
-                    <button class="sound-test-btn" onclick="taskManager.playSound('info')">
-                        <i class="fas fa-info"></i> Info
-                    </button>
-                </div>
-            </div>
-
-            <div class="notification-history">
-                <h3><i class="fas fa-history"></i> Recent Notifications</h3>
-                <div id="modalNotificationHistory">
-                    <!-- Notification history will be added here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div class="toast" id="toast">
-        <i class="fas fa-check-circle" id="toastIcon"></i>
-        <span id="toastMessage">Task added successfully!</span>
-    </div>
-
-    <script>
-        // Particle System
-        class ParticleSystem {
-            constructor() {
-                this.canvas = document.getElementById('particleCanvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.particles = [];
-                this.mouseX = 0;
-                this.mouseY = 0;
-                this.init();
-            }
-
-            init() {
-                this.resize();
-                this.createParticles();
-                this.animate();
-                
-                window.addEventListener('resize', () => this.resize());
-                window.addEventListener('mousemove', (e) => {
-                    this.mouseX = e.clientX;
-                    this.mouseY = e.clientY;
-                });
-            }
-
-            resize() {
-                this.canvas.width = window.innerWidth;
-                this.canvas.height = window.innerHeight;
-            }
-
-            createParticles() {
-                const particleCount = Math.floor((this.canvas.width * this.canvas.height) / 15000);
-                
-                for (let i = 0; i < particleCount; i++) {
-                    this.particles.push({
-                        x: Math.random() * this.canvas.width,
-                        y: Math.random() * this.canvas.height,
-                        size: Math.random() * 3 + 1,
-                        speedX: (Math.random() - 0.5) * 0.5,
-                        speedY: (Math.random() - 0.5) * 0.5,
-                        opacity: Math.random() * 0.5 + 0.2,
-                        hue: Math.random() * 60 + 240 // Blue to purple range
-                    });
-                }
-            }
-
-            animate() {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                
-                this.particles.forEach((particle, index) => {
-                    // Update position
-                    particle.x += particle.speedX;
-                    particle.y += particle.speedY;
-                    
-                    // Wrap around edges
-                    if (particle.x < 0) particle.x = this.canvas.width;
-                    if (particle.x > this.canvas.width) particle.x = 0;
-                    if (particle.y < 0) particle.y = this.canvas.height;
-                    if (particle.y > this.canvas.height) particle.y = 0;
-                    
-                    // Mouse interaction
-                    const dx = this.mouseX - particle.x;
-                    const dy = this.mouseY - particle.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (distance < 100) {
-                        const force = (100 - distance) / 100;
-                        particle.x -= (dx / distance) * force * 2;
-                        particle.y -= (dy / distance) * force * 2;
-                    }
-                    
-                    // Draw particle
-                    this.ctx.beginPath();
-                    this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-                    this.ctx.fillStyle = `hsla(${particle.hue}, 70%, 60%, ${particle.opacity})`;
-                    this.ctx.fill();
-                    
-                    // Draw connections
-                    for (let j = index + 1; j < this.particles.length; j++) {
-                        const other = this.particles[j];
-                        const dx = other.x - particle.x;
-                        const dy = other.y - particle.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (distance < 150) {
-                            this.ctx.beginPath();
-                            this.ctx.moveTo(particle.x, particle.y);
-                            this.ctx.lineTo(other.x, other.y);
-                            this.ctx.strokeStyle = `hsla(${particle.hue}, 70%, 60%, ${0.2 * (1 - distance / 150)})`;
-                            this.ctx.lineWidth = 0.5;
-                            this.ctx.stroke();
-                        }
-                    }
-                });
-                
-                requestAnimationFrame(() => this.animate());
-            }
+    // ===== Render Projects =====
+    const renderProjects = (filter = 'all', searchTerm = '') => {
+      projectsContainer.innerHTML = '';
+      projects.forEach(project => {
+        const matchCategory = filter === 'all' || project.category === filter;
+        const matchSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase());
+        if (matchCategory && matchSearch) {
+          const card = document.createElement('div');
+          card.classList.add('project-card');
+          card.setAttribute('data-category', project.category);
+          card.innerHTML = `
+            <img src="${project.image}" alt="${project.name}">
+            <div class="project-name">${project.name}</div>
+          `;
+          card.addEventListener('click', () => {
+            modalImg.src = project.image;
+            modalTitle.innerHTML = `<a href="${project.link}" target="_blank" style="color:#00f5a0; text-decoration:none;">${project.name}</a>
+            <p style="color:#aaa; margin-top:8px;">${project.description}</p>`;
+            modal.style.display = 'flex';
+          });
+          projectsContainer.appendChild(card);
         }
-
-        // Sound Manager Class
-        class SoundManager {
-            constructor() {
-                this.audioContext = null;
-                this.enabled = true;
-                this.volume = 0.5;
-                this.initAudioContext();
-            }
-
-            initAudioContext() {
-                try {
-                    window.AudioContext = window.AudioContext || window.webkitAudioContext;
-                    this.audioContext = new AudioContext();
-                } catch (e) {
-                    console.warn('Web Audio API not supported');
-                }
-            }
-
-            playSound(type) {
-                if (!this.enabled || !this.audioContext) return;
-
-                // Resume audio context if suspended (browser autoplay policy)
-                if (this.audioContext.state === 'suspended') {
-                    this.audioContext.resume();
-                }
-
-                const now = this.audioContext.currentTime;
-                const oscillator = this.audioContext.createOscillator();
-                const gainNode = this.audioContext.createGain();
-
-                oscillator.connect(gainNode);
-                gainNode.connect(this.audioContext.destination);
-
-                // Set different sounds for different types
-                switch(type) {
-                    case 'success':
-                        // Pleasant ascending tone
-                        oscillator.frequency.setValueAtTime(523.25, now); // C5
-                        oscillator.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
-                        oscillator.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
-                        gainNode.gain.setValueAtTime(this.volume * 0.3, now);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-                        oscillator.start(now);
-                        oscillator.stop(now + 0.5);
-                        break;
-
-                    case 'warning':
-                        // Attention-grabbing beep
-                        oscillator.frequency.setValueAtTime(800, now);
-                        oscillator.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-                        oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.2);
-                        gainNode.gain.setValueAtTime(this.volume * 0.4, now);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                        oscillator.start(now);
-                        oscillator.stop(now + 0.3);
-                        break;
-
-                    case 'danger':
-                        // Urgent alert tone
-                        oscillator.frequency.setValueAtTime(1000, now);
-                        oscillator.frequency.exponentialRampToValueAtTime(400, now + 0.05);
-                        oscillator.frequency.exponentialRampToValueAtTime(1000, now + 0.1);
-                        oscillator.frequency.exponentialRampToValueAtTime(400, now + 0.15);
-                        gainNode.gain.setValueAtTime(this.volume * 0.5, now);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                        oscillator.start(now);
-                        oscillator.stop(now + 0.2);
-                        break;
-
-                    case 'info':
-                        // Gentle chime
-                        oscillator.frequency.setValueAtTime(440, now); // A4
-                        oscillator.frequency.exponentialRampToValueAtTime(554.37, now + 0.1); // C#5
-                        oscillator.frequency.exponentialRampToValueAtTime(659.25, now + 0.2); // E5
-                        gainNode.gain.setValueAtTime(this.volume * 0.2, now);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-                        oscillator.start(now);
-                        oscillator.stop(now + 0.4);
-                        break;
-
-                    default:
-                        // Default notification sound
-                        oscillator.frequency.setValueAtTime(600, now);
-                        gainNode.gain.setValueAtTime(this.volume * 0.3, now);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                        oscillator.start(now);
-                        oscillator.stop(now + 0.2);
-                }
-            }
-
-            setVolume(value) {
-                this.volume = value / 100;
-            }
-
-            setEnabled(enabled) {
-                this.enabled = enabled;
-            }
-        }
-
-        // Task Manager Class with Sound Notifications
-        class TaskManager {
-            constructor() {
-                this.tasks = this.loadTasks();
-                this.currentFilter = 'all';
-                this.searchTerm = '';
-                this.notificationHistory = this.loadNotificationHistory();
-                this.notificationSettings = this.loadNotificationSettings();
-                this.unreadCount = 0;
-                this.notificationInterval = null;
-                this.dailySummaryInterval = null;
-                this.soundManager = new SoundManager();
-                this.init();
-            }
-
-            init() {
-                this.setupEventListeners();
-                this.renderTasks();
-                this.updateStats();
-                this.checkNotificationPermission();
-                this.startNotificationScheduler();
-                this.updateNotificationBadge();
-                this.loadNotificationSettingsUI();
-                this.initSoundSettings();
-            }
-
-            initSoundSettings() {
-                // Initialize volume controls
-                const volumeSlider = document.getElementById('soundVolume');
-                const modalVolumeSlider = document.getElementById('modalSoundVolume');
-                const volumeValue = document.getElementById('volumeValue');
-                const modalVolumeValue = document.getElementById('modalVolumeValue');
-
-                if (volumeSlider) {
-                    volumeSlider.addEventListener('input', (e) => {
-                        const value = e.target.value;
-                        this.soundManager.setVolume(value);
-                        volumeValue.textContent = value + '%';
-                        if (modalVolumeSlider) modalVolumeSlider.value = value;
-                        if (modalVolumeValue) modalVolumeValue.textContent = value + '%';
-                        this.updateNotificationSetting('soundVolume', value);
-                    });
-                }
-
-                if (modalVolumeSlider) {
-                    modalVolumeSlider.addEventListener('input', (e) => {
-                        const value = e.target.value;
-                        this.soundManager.setVolume(value);
-                        modalVolumeValue.textContent = value + '%';
-                        if (volumeSlider) volumeSlider.value = value;
-                        if (volumeValue) volumeValue.textContent = value + '%';
-                        this.updateNotificationSetting('soundVolume', value);
-                    });
-                }
-
-                // Set initial volume
-                const savedVolume = this.notificationSettings.soundVolume || 50;
-                this.soundManager.setVolume(savedVolume);
-                if (volumeSlider) volumeSlider.value = savedVolume;
-                if (modalVolumeSlider) modalVolumeSlider.value = savedVolume;
-                if (volumeValue) volumeValue.textContent = savedVolume + '%';
-                if (modalVolumeValue) modalVolumeValue.textContent = savedVolume + '%';
-            }
-
-            setupEventListeners() {
-                // Add task form
-                document.getElementById('addTaskForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.addTask();
-                });
-
-                // Edit task form
-                document.getElementById('editTaskForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.saveEditedTask();
-                });
-
-                // Search
-                document.getElementById('searchInput').addEventListener('input', (e) => {
-                    this.searchTerm = e.target.value.toLowerCase();
-                    this.renderTasks();
-                });
-
-                // Filter buttons
-                document.querySelectorAll('.filter-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                        btn.classList.add('active');
-                        this.currentFilter = btn.dataset.filter;
-                        this.renderTasks();
-                    });
-                });
-
-                // Notification settings in sidebar
-                ['enableNotifications', 'dueDateReminders', 'overdueAlerts', 'completionNotifications', 'soundEnabled'].forEach(id => {
-                    const checkbox = document.getElementById(id);
-                    if (checkbox) {
-                        checkbox.addEventListener('change', (e) => {
-                            this.updateNotificationSetting(id, e.target.checked);
-                            if (id === 'soundEnabled') {
-                                this.soundManager.setEnabled(e.target.checked);
-                            }
-                            // Sync with modal
-                            const modalCheckbox = document.getElementById('modal' + id.charAt(0).toUpperCase() + id.slice(1));
-                            if (modalCheckbox) modalCheckbox.checked = e.target.checked;
-                        });
-                    }
-                });
-
-                // Notification settings in modal
-                ['modalEnableNotifications', 'modalDueDateReminders', 'modalOverdueAlerts', 'modalCompletionNotifications', 'modalDailySummary', 'modalSoundEnabled'].forEach(id => {
-                    const checkbox = document.getElementById(id);
-                    if (checkbox) {
-                        checkbox.addEventListener('change', (e) => {
-                            const settingId = id.replace('modal', '').charAt(0).toLowerCase() + id.replace('modal', '').slice(1);
-                            this.updateNotificationSetting(settingId, e.target.checked);
-                            if (settingId === 'soundEnabled') {
-                                this.soundManager.setEnabled(e.target.checked);
-                            }
-                            // Sync with sidebar
-                            const sidebarCheckbox = document.getElementById(settingId);
-                            if (sidebarCheckbox) sidebarCheckbox.checked = e.target.checked;
-                        });
-                    }
-                });
-
-                // Close modal on outside click
-                document.getElementById('editModal').addEventListener('click', (e) => {
-                    if (e.target.id === 'editModal') {
-                        this.closeEditModal();
-                    }
-                });
-
-                document.getElementById('notificationSettingsModal').addEventListener('click', (e) => {
-                    if (e.target.id === 'notificationSettingsModal') {
-                        this.closeNotificationSettings();
-                    }
-                });
-            }
-
-            checkNotificationPermission() {
-                if ('Notification' in window) {
-                    if (Notification.permission === 'default') {
-                        document.getElementById('permissionBanner').classList.remove('hidden');
-                    } else if (Notification.permission === 'granted') {
-                        document.getElementById('permissionBanner').classList.add('hidden');
-                    } else {
-                        document.getElementById('permissionBanner').classList.add('hidden');
-                    }
-                } else {
-                    document.getElementById('permissionBanner').classList.add('hidden');
-                }
-            }
-
-            async requestNotificationPermission() {
-                if ('Notification' in window) {
-                    try {
-                        const permission = await Notification.requestPermission();
-                        if (permission === 'granted') {
-                            this.addNotificationToHistory('Browser notifications enabled', 'success');
-                            this.showToast('Notifications enabled successfully!', 'success');
-                            this.soundManager.playSound('success');
-                            document.getElementById('permissionBanner').classList.add('hidden');
-                        } else if (permission === 'denied') {
-                            this.showToast('Notification permission denied. Please enable in browser settings.', 'error');
-                            this.soundManager.playSound('danger');
-                            document.getElementById('permissionBanner').classList.add('hidden');
-                        }
-                    } catch (error) {
-                        console.error('Error requesting notification permission:', error);
-                        this.showToast('Error enabling notifications', 'error');
-                        this.soundManager.playSound('danger');
-                    }
-                } else {
-                    this.showToast('Browser notifications not supported', 'error');
-                    this.soundManager.playSound('danger');
-                }
-            }
-
-            startNotificationScheduler() {
-                // Clear existing intervals
-                if (this.notificationInterval) {
-                    clearInterval(this.notificationInterval);
-                }
-
-                // Check for due tasks every 30 seconds
-                this.notificationInterval = setInterval(() => {
-                    this.checkDueTasks();
-                }, 30000);
-
-                // Check immediately on load
-                this.checkDueTasks();
-
-                // Schedule daily summary if enabled
-                if (this.notificationSettings.dailySummary) {
-                    this.scheduleDailySummary();
-                }
-            }
-
-            checkDueTasks() {
-                if (!this.notificationSettings.enableNotifications) return;
-
-                const now = new Date();
-                const today = now.toISOString().split('T')[0];
-                const currentTime = now.toTimeString().slice(0, 5);
-
-                this.tasks.forEach(task => {
-                    if (task.completed) return;
-
-                    // Check for tasks due today with time
-                    if (task.dueDate === today && task.dueTime) {
-                        const taskDateTime = new Date(`${task.dueDate}T${task.dueTime}`);
-                        const timeDiff = taskDateTime - now;
-                        
-                        // Notify 15 minutes before due time
-                        if (timeDiff > 0 && timeDiff <= 15 * 60 * 1000 && !task.notified15Min) {
-                            if (this.notificationSettings.dueDateReminders) {
-                                this.sendNotification(
-                                    `Task Due Soon: ${task.title}`,
-                                    `Your task "${task.title}" is due in 15 minutes!`,
-                                    'warning'
-                                );
-                                task.notified15Min = true;
-                                this.saveTasks();
-                            }
-                        }
-                        
-                        // Notify at due time
-                        if (timeDiff <= 0 && timeDiff > -60 * 1000 && !task.notifiedDue) {
-                            if (this.notificationSettings.dueDateReminders) {
-                                this.sendNotification(
-                                    `Task Due Now: ${task.title}`,
-                                    `Your task "${task.title}" is due now!`,
-                                    'danger'
-                                );
-                                task.notifiedDue = true;
-                                this.saveTasks();
-                            }
-                        }
-                    }
-
-                    // Check for overdue tasks
-                    if (task.dueDate && task.dueDate < today && !task.overdueNotified) {
-                        if (this.notificationSettings.overdueAlerts) {
-                            this.sendNotification(
-                                `Overdue Task: ${task.title}`,
-                                `Your task "${task.title}" is overdue!`,
-                                'danger'
-                            );
-                            task.overdueNotified = true;
-                            this.saveTasks();
-                        }
-                    }
-                });
-            }
-
-            scheduleDailySummary() {
-                // Clear existing daily summary interval
-                if (this.dailySummaryInterval) {
-                    clearInterval(this.dailySummaryInterval);
-                }
-
-                const now = new Date();
-                const tomorrow = new Date(now);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                tomorrow.setHours(9, 0, 0, 0);
-                
-                const msUntil9AM = tomorrow - now;
-                
-                this.dailySummaryInterval = setTimeout(() => {
-                    this.sendDailySummary();
-                    // Schedule next day
-                    this.scheduleDailySummary();
-                }, msUntil9AM);
-            }
-
-            sendDailySummary() {
-                if (!this.notificationSettings.enableNotifications || !this.notificationSettings.dailySummary) return;
-
-                const today = new Date().toISOString().split('T')[0];
-                const todayTasks = this.tasks.filter(t => t.dueDate === today && !t.completed);
-                const overdueTasks = this.tasks.filter(t => t.dueDate && t.dueDate < today && !t.completed);
-
-                let message = `Good morning! You have ${todayTasks.length} task(s) due today.`;
-                if (overdueTasks.length > 0) {
-                    message += ` ${overdueTasks.length} task(s) are overdue.`;
-                }
-
-                this.sendNotification('Daily Task Summary', message, 'info');
-            }
-
-            sendNotification(title, body, type = 'info') {
-                // Play sound effect
-                if (this.notificationSettings.soundEnabled) {
-                    this.soundManager.playSound(type);
-                }
-
-                // Add to notification history
-                this.addNotificationToHistory(body, type);
-                
-                // Show browser notification if permission granted and enabled
-                if ('Notification' in window &&
-                    Notification.permission === 'granted' &&
-                    this.notificationSettings.enableNotifications) {
-                    
-                    try {
-                        const icon = type === 'danger' ? '⚠️' : type === 'warning' ? '⏰' : type === 'success' ? '✅' : 'ℹ️';
-                        
-                        const notification = new Notification(title, {
-                            body: body,
-                            icon: `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${icon}</text></svg>`,
-                            tag: 'taskflow-notification',
-                            renotify: true
-                        });
-
-                        // Auto-close after 5 seconds
-                        setTimeout(() => {
-                            notification.close();
-                        }, 5000);
-
-                        // Click handler to focus window
-                        notification.onclick = () => {
-                            window.focus();
-                            notification.close();
-                        };
-                    } catch (error) {
-                        console.error('Error sending notification:', error);
-                    }
-                }
-
-                // Update badge
-                this.unreadCount++;
-                this.updateNotificationBadge();
-            }
-
-            addNotificationToHistory(message, type) {
-                const notification = {
-                    id: Date.now(),
-                    message,
-                    type,
-                    timestamp: new Date().toISOString()
-                };
-
-                this.notificationHistory.unshift(notification);
-                
-                // Keep only last 20 notifications
-                if (this.notificationHistory.length > 20) {
-                    this.notificationHistory = this.notificationHistory.slice(0, 20);
-                }
-
-                this.saveNotificationHistory();
-                this.renderNotificationHistory();
-            }
-
-            renderNotificationHistory() {
-                const historyContainer = document.getElementById('notificationHistory');
-                const modalHistoryContainer = document.getElementById('modalNotificationHistory');
-                
-                if (this.notificationHistory.length === 0) {
-                    const emptyHistory = '<div class="notification-item"><i class="fas fa-info-circle"></i><span>No notifications yet</span></div>';
-                    if (historyContainer) historyContainer.innerHTML = emptyHistory;
-                    if (modalHistoryContainer) modalHistoryContainer.innerHTML = emptyHistory;
-                    return;
-                }
-
-                const historyHTML = this.notificationHistory.slice(0, 5).map(notification => {
-                    const time = new Date(notification.timestamp).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                    const icon = notification.type === 'danger' ? 'exclamation-triangle' :
-                                 notification.type === 'warning' ? 'clock' :
-                                 notification.type === 'success' ? 'check-circle' : 'info-circle';
-                    
-                    return `
-                        <div class="notification-item">
-                            <i class="fas fa-${icon}"></i>
-                            <span>${notification.message}</span>
-                            <span class="notification-time">${time}</span>
-                        </div>
-                    `;
-                }).join('');
-
-                if (historyContainer) historyContainer.innerHTML = historyHTML;
-                if (modalHistoryContainer) modalHistoryContainer.innerHTML = historyHTML;
-            }
-
-            updateNotificationBadge() {
-                const badge = document.getElementById('notificationBadge');
-                if (badge) {
-                    if (this.unreadCount > 0) {
-                        badge.textContent = this.unreadCount > 99 ? '99+' : this.unreadCount;
-                        badge.style.display = 'flex';
-                    } else {
-                        badge.style.display = 'none';
-                    }
-                }
-            }
-
-            showNotificationSettings() {
-                document.getElementById('notificationSettingsModal').classList.add('active');
-                this.renderNotificationHistory();
-                this.unreadCount = 0;
-                this.updateNotificationBadge();
-            }
-
-            closeNotificationSettings() {
-                document.getElementById('notificationSettingsModal').classList.remove('active');
-            }
-
-            loadNotificationSettings() {
-                const saved = localStorage.getItem('notificationSettings');
-                return saved ? JSON.parse(saved) : {
-                    enableNotifications: true,
-                    dueDateReminders: true,
-                    overdueAlerts: true,
-                    completionNotifications: true,
-                    dailySummary: false,
-                    soundEnabled: true,
-                    soundVolume: 50
-                };
-            }
-
-            loadNotificationSettingsUI() {
-                Object.keys(this.notificationSettings).forEach(key => {
-                    // Update sidebar checkboxes
-                    const sidebarCheckbox = document.getElementById(key);
-                    if (sidebarCheckbox) {
-                        sidebarCheckbox.checked = this.notificationSettings[key];
-                    }
-                    
-                    // Update modal checkboxes
-                    const modalKey = 'modal' + key.charAt(0).toUpperCase() + key.slice(1);
-                    const modalCheckbox = document.getElementById(modalKey);
-                    if (modalCheckbox) {
-                        modalCheckbox.checked = this.notificationSettings[key];
-                    }
-                });
-
-                // Initialize sound manager
-                this.soundManager.setEnabled(this.notificationSettings.soundEnabled);
-            }
-
-            updateNotificationSetting(key, value) {
-                this.notificationSettings[key] = value;
-                localStorage.setItem('notificationSettings', JSON.stringify(this.notificationSettings));
-                
-                if (key === 'dailySummary' && value) {
-                    this.scheduleDailySummary();
-                } else if (key === 'dailySummary' && !value) {
-                    if (this.dailySummaryInterval) {
-                        clearInterval(this.dailySummaryInterval);
-                        this.dailySummaryInterval = null;
-                    }
-                }
-            }
-
-            generateId() {
-                return '_' + Math.random().toString(36).substr(2, 9);
-            }
-
-            addTask() {
-                const title = document.getElementById('taskTitle').value.trim();
-                const description = document.getElementById('taskDescription').value.trim();
-                const priority = document.getElementById('taskPriority').value;
-                const category = document.getElementById('taskCategory').value;
-                const dueDate = document.getElementById('taskDue').value;
-                const dueTime = document.getElementById('taskTime').value;
-
-                if (!title) {
-                    this.showToast('Please enter a task title', 'error');
-                    this.soundManager.playSound('danger');
-                    return;
-                }
-
-                const task = {
-                    id: this.generateId(),
-                    title,
-                    description,
-                    priority,
-                    category,
-                    dueDate,
-                    dueTime,
-                    completed: false,
-                    createdAt: new Date().toISOString()
-                };
-
-                this.tasks.unshift(task);
-                this.saveTasks();
-                this.renderTasks();
-                this.updateStats();
-                this.clearForm();
-                this.showToast('Task added successfully!', 'success');
-                this.soundManager.playSound('success');
-
-                // Send notification if enabled
-                if (this.notificationSettings.enableNotifications && this.notificationSettings.completionNotifications) {
-                    this.addNotificationToHistory(`New task added: ${title}`, 'success');
-                }
-            }
-
-            editTask(id) {
-                const task = this.tasks.find(t => t.id === id);
-                if (!task) return;
-
-                document.getElementById('editTaskId').value = task.id;
-                document.getElementById('editTaskTitle').value = task.title;
-                document.getElementById('editTaskDescription').value = task.description;
-                document.getElementById('editTaskPriority').value = task.priority;
-                document.getElementById('editTaskCategory').value = task.category;
-                document.getElementById('editTaskDue').value = task.dueDate;
-                document.getElementById('editTaskTime').value = task.dueTime || '';
-
-                document.getElementById('editModal').classList.add('active');
-            }
-
-            saveEditedTask() {
-                const id = document.getElementById('editTaskId').value;
-                const taskIndex = this.tasks.findIndex(t => t.id === id);
-                
-                if (taskIndex === -1) return;
-
-                this.tasks[taskIndex] = {
-                    ...this.tasks[taskIndex],
-                    title: document.getElementById('editTaskTitle').value.trim(),
-                    description: document.getElementById('editTaskDescription').value.trim(),
-                    priority: document.getElementById('editTaskPriority').value,
-                    category: document.getElementById('editTaskCategory').value,
-                    dueDate: document.getElementById('editTaskDue').value,
-                    dueTime: document.getElementById('editTaskTime').value
-                };
-
-                this.saveTasks();
-                this.renderTasks();
-                this.updateStats();
-                this.closeEditModal();
-                this.showToast('Task updated successfully!', 'success');
-                this.soundManager.playSound('success');
-            }
-
-            deleteTask(id) {
-                if (confirm('Are you sure you want to delete this task?')) {
-                    this.tasks = this.tasks.filter(t => t.id !== id);
-                    this.saveTasks();
-                    this.renderTasks();
-                    this.updateStats();
-                    this.showToast('Task deleted successfully!', 'info');
-                    this.soundManager.playSound('info');
-                }
-            }
-
-            toggleTask(id) {
-                const task = this.tasks.find(t => t.id === id);
-                if (task) {
-                    task.completed = !task.completed;
-                    this.saveTasks();
-                    this.renderTasks();
-                    this.updateStats();
-
-                    // Send completion notification
-                    if (task.completed && this.notificationSettings.enableNotifications && this.notificationSettings.completionNotifications) {
-                        this.sendNotification(
-                            'Task Completed!',
-                            `Great job! You completed "${task.title}"`,
-                            'success'
-                        );
-                    } else if (!task.completed) {
-                        this.soundManager.playSound('info');
-                    }
-                }
-            }
-
-            getFilteredTasks() {
-                let filtered = [...this.tasks];
-
-                // Apply search filter
-                if (this.searchTerm) {
-                    filtered = filtered.filter(task => 
-                        task.title.toLowerCase().includes(this.searchTerm) ||
-                        task.description.toLowerCase().includes(this.searchTerm) ||
-                        task.category.toLowerCase().includes(this.searchTerm)
-                    );
-                }
-
-                // Apply status filter
-                const today = new Date().toISOString().split('T')[0];
-                
-                switch(this.currentFilter) {
-                    case 'active':
-                        filtered = filtered.filter(t => !t.completed);
-                        break;
-                    case 'completed':
-                        filtered = filtered.filter(t => t.completed);
-                        break;
-                    case 'today':
-                        filtered = filtered.filter(t => t.dueDate === today);
-                        break;
-                    case 'overdue':
-                        filtered = filtered.filter(t => t.dueDate && t.dueDate < today && !t.completed);
-                        break;
-                }
-
-                return filtered;
-            }
-
-            renderTasks() {
-                const taskList = document.getElementById('taskList');
-                const emptyState = document.getElementById('emptyState');
-                const filteredTasks = this.getFilteredTasks();
-
-                if (filteredTasks.length === 0) {
-                    taskList.innerHTML = '';
-                    emptyState.style.display = 'block';
-                    return;
-                }
-
-                emptyState.style.display = 'none';
-                
-                taskList.innerHTML = filteredTasks.map(task => {
-                    const today = new Date().toISOString().split('T')[0];
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    const tomorrowStr = tomorrow.toISOString().split('T')[0];
-                    
-                    let dueClass = '';
-                    if (task.dueDate) {
-                        if (task.dueDate < today && !task.completed) {
-                            dueClass = 'overdue';
-                        } else if (task.dueDate === today || task.dueDate === tomorrowStr) {
-                            dueClass = 'due-soon';
-                        }
-                    }
-
-                    const dueDateText = task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                    }) : '';
-
-                    const dueTimeText = task.dueTime ? ` at ${task.dueTime}` : '';
-
-                    return `
-                        <li class="task-item ${task.completed ? 'completed' : ''}" draggable="true" data-id="${task.id}">
-                            <div class="task-checkbox ${task.completed ? 'checked' : ''}" onclick="taskManager.toggleTask('${task.id}')"></div>
-                            <div class="task-content">
-                                <h3>${this.escapeHtml(task.title)}</h3>
-                                ${task.description ? `<p>${this.escapeHtml(task.description)}</p>` : ''}
-                                <div class="task-meta">
-                                    <span class="task-priority priority-${task.priority}">${task.priority}</span>
-                                    <span class="task-category">${task.category}</span>
-                                    ${task.dueDate ? `
-                                        <span class="task-due ${dueClass}">
-                                            <i class="fas fa-calendar"></i> ${dueDateText}${dueTimeText}
-                                        </span>
-                                    ` : ''}
-                                </div>
-                            </div>
-                            <div class="task-actions">
-                                <button class="task-btn edit" onclick="taskManager.editTask('${task.id}')" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="task-btn delete" onclick="taskManager.deleteTask('${task.id}')" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </li>
-                    `;
-                }).join('');
-
-                this.setupDragAndDrop();
-            }
-
-            setupDragAndDrop() {
-                const taskItems = document.querySelectorAll('.task-item');
-                
-                taskItems.forEach(item => {
-                    item.addEventListener('dragstart', (e) => {
-                        e.dataTransfer.effectAllowed = 'move';
-                        e.dataTransfer.setData('text/html', item.innerHTML);
-                        item.classList.add('dragging');
-                    });
-
-                    item.addEventListener('dragend', () => {
-                        item.classList.remove('dragging');
-                    });
-
-                    item.addEventListener('dragover', (e) => {
-                        e.preventDefault();
-                        const draggingItem = document.querySelector('.dragging');
-                        const taskList = document.getElementById('taskList');
-                        const afterElement = this.getDragAfterElement(taskList, e.clientY);
-                        
-                        if (afterElement == null) {
-                            taskList.appendChild(draggingItem);
-                        } else {
-                            taskList.insertBefore(draggingItem, afterElement);
-                        }
-                    });
-                });
-            }
-
-            getDragAfterElement(container, y) {
-                const draggableElements = [...container.querySelectorAll('.task-item:not(.dragging)')];
-                
-                return draggableElements.reduce((closest, child) => {
-                    const box = child.getBoundingClientRect();
-                    const offset = y - box.top - box.height / 2;
-                    
-                    if (offset < 0 && offset > closest.offset) {
-                        return { offset: offset, element: child };
-                    } else {
-                        return closest;
-                    }
-                }, { offset: Number.NEGATIVE_INFINITY }).element;
-            }
-
-            updateStats() {
-                const total = this.tasks.length;
-                const completed = this.tasks.filter(t => t.completed).length;
-                const active = total - completed;
-                const today = new Date().toISOString().split('T')[0];
-                const overdue = this.tasks.filter(t => t.dueDate && t.dueDate < today && !t.completed).length;
-                
-                const highPriority = this.tasks.filter(t => t.priority === 'high' && !t.completed).length;
-                const mediumPriority = this.tasks.filter(t => t.priority === 'medium' && !t.completed).length;
-                const lowPriority = this.tasks.filter(t => t.priority === 'low' && !t.completed).length;
-
-                document.getElementById('totalTasks').textContent = total;
-                document.getElementById('completedTasks').textContent = completed;
-                document.getElementById('activeTasks').textContent = active;
-                document.getElementById('overdueTasks').textContent = overdue;
-                
-                const highPriorityEl = document.getElementById('highPriorityCount');
-                const mediumPriorityEl = document.getElementById('mediumPriorityCount');
-                const lowPriorityEl = document.getElementById('lowPriorityCount');
-                
-                if (highPriorityEl) highPriorityEl.textContent = highPriority;
-                if (mediumPriorityEl) mediumPriorityEl.textContent = mediumPriority;
-                if (lowPriorityEl) lowPriorityEl.textContent = lowPriority;
-
-                const progressPercentage = total > 0 ? (completed / total * 100) : 0;
-                document.getElementById('progressFill').style.width = `${progressPercentage}%`;
-            }
-
-            clearForm() {
-                document.getElementById('addTaskForm').reset();
-                document.getElementById('taskPriority').value = 'medium';
-                document.getElementById('taskCategory').value = 'personal';
-            }
-
-            closeEditModal() {
-                document.getElementById('editModal').classList.remove('active');
-            }
-
-            showToast(message, type = 'success') {
-                const toast = document.getElementById('toast');
-                const toastMessage = document.getElementById('toastMessage');
-                const toastIcon = document.getElementById('toastIcon');
-                
-                toastMessage.textContent = message;
-                toast.className = `toast ${type}`;
-                
-                // Set icon based on type
-                if (type === 'success') {
-                    toastIcon.className = 'fas fa-check-circle';
-                } else if (type === 'error') {
-                    toastIcon.className = 'fas fa-exclamation-circle';
-                } else {
-                    toastIcon.className = 'fas fa-info-circle';
-                }
-                
-                toast.classList.add('show');
-                
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 3000);
-            }
-
-            escapeHtml(text) {
-                const map = {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#039;'
-                };
-                return text.replace(/[&<>"']/g, m => map[m]);
-            }
-
-            saveTasks() {
-                localStorage.setItem('tasks', JSON.stringify(this.tasks));
-            }
-
-            loadTasks() {
-                const saved = localStorage.getItem('tasks');
-                return saved ? JSON.parse(saved) : [];
-            }
-
-            saveNotificationHistory() {
-                localStorage.setItem('notificationHistory', JSON.stringify(this.notificationHistory));
-            }
-
-            loadNotificationHistory() {
-                const saved = localStorage.getItem('notificationHistory');
-                return saved ? JSON.parse(saved) : [];
-            }
-        }
-
-        // Initialize Particle System
-        const particleSystem = new ParticleSystem();
-
-        // Initialize Task Manager
-        const taskManager = new TaskManager();
-
-        // Theme Toggle Function
-        function toggleTheme() {
-            const body = document.body;
-            const themeIcon = document.getElementById('themeIcon');
-            
-            body.classList.toggle('dark-mode');
-            const isDarkMode = body.classList.contains('dark-mode');
-            
-            // Save preference
-            localStorage.setItem('darkMode', isDarkMode);
-            
-            // Update icon
-            if (isDarkMode) {
-                themeIcon.className = 'fas fa-sun';
-            } else {
-                themeIcon.className = 'fas fa-moon';
-            }
-        }
-
-        // Check for saved theme preference on load
-        function checkDarkMode() {
-            const darkMode = localStorage.getItem('darkMode') === 'true';
-            const body = document.body;
-            const themeIcon = document.getElementById('themeIcon');
-            
-            if (darkMode) {
-                body.classList.add('dark-mode');
-                themeIcon.className = 'fas fa-sun';
-            } else {
-                body.classList.remove('dark-mode');
-                themeIcon.className = 'fas fa-moon';
-            }
-        }
-
-        // Initialize theme on page load
-        checkDarkMode();
-
-        // Close Edit Modal
-        function closeEditModal() {
-            taskManager.closeEditModal();
-        }
-
-        // Set minimum date to today
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('taskDue').min = today;
-        document.getElementById('editTaskDue').min = today;
-    </script>
+      });
+    };
+
+    renderProjects();
+
+    // ===== Filter Buttons =====
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderProjects(btn.dataset.category, searchInput.value);
+      });
+    });
+
+    // ===== Search Input =====
+    searchInput.addEventListener('input', e => {
+      const activeCategory = document.querySelector('.filter-btn.active').dataset.category;
+      renderProjects(activeCategory, e.target.value);
+    });
+
+    // ===== Close Modal =====
+    closeModal.addEventListener('click', () => modal.style.display = 'none');
+    window.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+  </script>
 </body>
 </html>
